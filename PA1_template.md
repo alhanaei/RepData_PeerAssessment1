@@ -1,14 +1,7 @@
----
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:  
-    keep_md: true
----
+# Reproducible Research: Peer Assessment 1
   
  
-```{r global_options, include=FALSE}
-knitr::opts_chunk$set(fig.width=8, fig.height=8,echo=TRUE, warning=FALSE, message=FALSE)
-```
+
 
 
 
@@ -25,8 +18,8 @@ knitr::opts_chunk$set(fig.width=8, fig.height=8,echo=TRUE, warning=FALSE, messag
 ## Initializing
 to run the code we need to use 'ggplot2', 'dplyr',  'lubridate' and 'stringr' packages.
 
-```{r init}
 
+```r
 library("ggplot2")
 library("dplyr")
 library("lubridate")
@@ -41,7 +34,8 @@ To get the 'csv' file from the Zip file I use 'unz()' and then load the data usi
 The data is stored in a data frame 'mydata'
 No further processing is needed.
 
-```{r readfile ,cache=TRUE }
+
+```r
 mydata <-  read.csv(unz("activity.zip", "activity.csv"),) 
 ```
 
@@ -54,25 +48,29 @@ To calculated the mean total number of steps taken each day I do the following
 * Groub the data by day to make it ready for summarise
 * Summarise data by sum of steps per day
 
-```{r daystep}
+
+```r
 day.data<-  mydata %>%
     filter(! is.na(steps))%>%
     group_by(date) %>%
     summarise(daysteps=sum(steps))
 ```
 
-The total number of steps taken per day have mean of **`r sprintf("%.2f", mean(day.data$daysteps))`** steps
-and median of **`r sprintf("%.2f", median(day.data$daysteps))`** steps.
+The total number of steps taken per day have mean of **10766.19** steps
+and median of **10765.00** steps.
 
 
 Here is the histogram of the total number of steps taken each day where x-axis is the number of steps per day and y-axis is the frequecy of that number of steps to observed.
 
-```{r ggdaystep}
+
+```r
 ggplot(day.data, aes(x=daysteps)) + 
     geom_histogram(color = "darkgreen", fill = "lightgreen", breaks = seq(0,22000,by=1000))+ 
     labs(list(title = "Histogram of the total number of steps taken each day",
               x = "Steps per day", y = "Frequency"))
 ```
+
+![](PA1_template_files/figure-html/ggdaystep-1.png) 
 
 
 ## What is the average daily activity pattern?
@@ -84,7 +82,8 @@ To get the Average daily activity pattern  I do the following
 * Summarise data by mean steps per per interval
 
 
-```{r intervals}
+
+```r
 interval.data<-  
     mydata %>%
     filter(! is.na(steps))%>%
@@ -94,34 +93,38 @@ interval.data<-
 
 below is a time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
 
-```{r gginterval}
+
+```r
 ggplot(interval.data,aes(x=interval,y=suminterval))+geom_line()+
     labs(list(title = "Average daily activity pattern", x = "Time of the Day",
               y = "AVG. #steps per 5 min interval "))
-
 ```
+
+![](PA1_template_files/figure-html/gginterval-1.png) 
 
 
 The 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps
-**`r str_pad(interval.data[which.max(interval.data$suminterval),]$interval, 4, pad = "0")`**
-with **`r interval.data[which.max(interval.data$suminterval),]$suminterval `** steps
+**0835**
+with **206.1698113** steps
 
 ## Imputing missing values
 
-The total number of missing values in the dataset is *`r sum(is.na(mydata$steps))`*
+The total number of missing values in the dataset is *2304*
 
 To remove the missing values I replace 'NA' with the mean for that 5-minute interval
 
 calculated as follows.
 
-```{r impute}
+
+```r
 int.imp<-function(x)  (interval.data[match(x,interval.data$interval),]$suminterval)
 ```
 
 I have created one data frame containing the original data and imputed data and
 generated the histogram below
 
-```{r imp.data}
+
+```r
 imputedata <- mutate(mydata, steps =ifelse(is.na(steps),int.imp(interval ),steps ) )
 
 imp.day.data<-  imputedata %>%
@@ -137,7 +140,8 @@ con.data <- day.data %>%
 
 This is the code for plotting the histogram
 
-```{r ggimp.data}
+
+```r
 ggplot(con.data, aes(x=daysteps,fill = impute)) + 
     geom_histogram(color = "darkgreen",alpha = 0.8, breaks = seq(-1000,22000,by=1000),
                    position="dodge")+
@@ -145,13 +149,15 @@ ggplot(con.data, aes(x=daysteps,fill = impute)) +
               x = "Steps per day", y = "Frequency"))
 ```
 
+![](PA1_template_files/figure-html/ggimp.data-1.png) 
 
 
-Them mean Total number of steps taken per day was `r sprintf("%.2f", mean(day.data$daysteps))` and after imputing 'NA' it is
-`r sprintf("%.2f", mean(imp.day.data$daysteps))`
+
+Them mean Total number of steps taken per day was 10766.19 and after imputing 'NA' it is
+10766.19
 
 
-Them Median Total number of steps taken per day was `r sprintf("%.2f", median(day.data$daysteps))` and after imputing 'NA' it is `r sprintf("%.2f", median(imp.day.data$daysteps))`
+Them Median Total number of steps taken per day was 10765.00 and after imputing 'NA' it is 10766.19
 
 There is no change in the mean number of steps taked per day. since when we
 we are adding steps equal to the mean of the intervals. thens is due to the fact that when there is NA it is For the whole day. while for the median did change since we increased the number of occurances of total number that is equal to the mean. 
@@ -160,7 +166,8 @@ we are adding steps equal to the mean of the intervals. thens is due to the fact
 
 There is differences in activity patterns between weekdays and weekends as times series plot shows.
 
-```{r week}
+
+```r
 imp.interval.data<-  
     imputedata %>%    
     mutate(Weekday = ifelse(wday(date) %in% c(1,7),"Weekend","weekday"))%>%
@@ -170,10 +177,13 @@ imp.interval.data<-
     
 This is the code to plot the time series.
     
-```{r ggweek}    
+
+```r
 ggplot(imp.interval.data,aes(x=interval,y=suminterval))+
     geom_line()+
     facet_grid(Weekday ~ .)+
     labs(list(title = "Activity patterns between weekdays and weekends",
               x = "Time of the Day", y = "AVG. #steps per 5 min interval "))
 ```
+
+![](PA1_template_files/figure-html/ggweek-1.png) 
